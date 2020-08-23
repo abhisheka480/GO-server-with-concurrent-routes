@@ -16,7 +16,9 @@ func JwtTokenSet(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&creds)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode("Request Body could not be decoded")
+		fmt.Println("Request Body could not be decoded")
+		resData := createResponse(http.StatusBadRequest, "Request Body could not be decoded")
+		json.NewEncoder(w).Encode(resData)
 		return
 	}
 	fmt.Println("creds:", creds)
@@ -25,7 +27,9 @@ func JwtTokenSet(w http.ResponseWriter, r *http.Request) {
 
 	if !ok || expectedPassword != creds.Password {
 		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode("Wrong password")
+		fmt.Println("Wrong token sent")
+		resData := createResponse(http.StatusUnauthorized, "Wrong password")
+		json.NewEncoder(w).Encode(resData)
 		return
 	}
 
@@ -42,8 +46,10 @@ func JwtTokenSet(w http.ResponseWriter, r *http.Request) {
 	// Create the JWT string
 	tokenString, err := token.SignedString(config.MYSECRETKEY)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode("Wrong token sent")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Wrong token sent")
+		resData := createResponse(http.StatusBadRequest, "Wrong token sent")
+		json.NewEncoder(w).Encode(resData)
 		return
 	}
 
@@ -52,7 +58,10 @@ func JwtTokenSet(w http.ResponseWriter, r *http.Request) {
 		Value:   tokenString,
 		Expires: expirationTime,
 	})
-	json.NewEncoder(w).Encode("Token Successfully Set")
+	w.WriteHeader(http.StatusOK)
+	fmt.Println("Token Successfully Set")
+	resData := createResponse(http.StatusOK, "Token Successfully Set")
+	json.NewEncoder(w).Encode(resData)
 }
 
 func AuthenticateUser(next http.Handler) http.Handler { //this will act as a middleware in incoming requests to validate user
@@ -62,11 +71,15 @@ func AuthenticateUser(next http.Handler) http.Handler { //this will act as a mid
 			if err == http.ErrNoCookie {
 				// If the cookie is not set, return an unauthorized status
 				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode("Unauthorised")
+				fmt.Println("Unauthorised")
+				resData := createResponse(http.StatusUnauthorized, "Unauthorised")
+				json.NewEncoder(w).Encode(resData)
 				return
 			}
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode("Unauthorised")
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Println("Unauthorised")
+			resData := createResponse(http.StatusUnauthorized, "Unauthorised")
+			json.NewEncoder(w).Encode(resData)
 			return
 		}
 
@@ -85,19 +98,32 @@ func AuthenticateUser(next http.Handler) http.Handler { //this will act as a mid
 		if err != nil {
 			if err == jwt.ErrSignatureInvalid {
 				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode("Unauthorised")
+				fmt.Println("Unauthorised")
+				resData := createResponse(http.StatusUnauthorized, "Unauthorised")
+				json.NewEncoder(w).Encode(resData)
 				return
 			}
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode("Unauthorised")
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Println("Unauthorised")
+			resData := createResponse(http.StatusUnauthorized, "Unauthorised")
+			json.NewEncoder(w).Encode(resData)
 			return
 		}
 		if !token.Valid {
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode("Unauthorised")
+			fmt.Println("Token is invalid")
+			resData := createResponse(http.StatusUnauthorized, "Token is invalid")
+			json.NewEncoder(w).Encode(resData)
 			return
 		}
 		fmt.Println("User is authorised")
 		next.ServeHTTP(w, r)
 	})
+}
+
+func createResponse(code int, message string) models.ResponseData {
+	responseData := models.ResponseData{}
+	responseData.StatusCode = code
+	responseData.Message = message
+	return responseData
 }

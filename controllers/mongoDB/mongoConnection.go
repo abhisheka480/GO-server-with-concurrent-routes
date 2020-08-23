@@ -22,6 +22,10 @@ func ConnectDB() *mongo.Collection {
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {
+		fmt.Println("Error in establishing mongodb connection")
+		// resData := models.ResponseData{}
+		// resData.StatusCode = http.StatusBadRequest
+		// resData.Message = "Error in establishing mongodb connection"
 		log.Fatal(err)
 	}
 
@@ -34,7 +38,6 @@ func ConnectDB() *mongo.Collection {
 
 func GetError(err error, w http.ResponseWriter) {
 
-	//log.Fatal(err.Error())
 	var response = models.ErrorResponse{
 		ErrorMessage: err.Error(),
 		StatusCode:   http.StatusBadRequest,

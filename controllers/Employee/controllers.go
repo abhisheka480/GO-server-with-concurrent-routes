@@ -23,7 +23,9 @@ func AddEmployeeData(w http.ResponseWriter, r *http.Request) {
 	// we decode our body request params
 	err := json.NewDecoder(r.Body).Decode(&employeeData)
 	if err != nil {
-		fmt.Fprintf(w, "Error in reading employee data")
+		fmt.Println("Error in reading employee data")
+		resData := createResponse(http.StatusBadRequest, "Error in reading employee data")
+		json.NewEncoder(w).Encode(resData)
 	}
 
 	employeeData.IsActive = true
@@ -31,7 +33,8 @@ func AddEmployeeData(w http.ResponseWriter, r *http.Request) {
 
 	if employeeData.Name == "" {
 		fmt.Println("Name of employee cannot be empty")
-		json.NewEncoder(w).Encode("Name of employee cannot be empty")
+		resData := createResponse(http.StatusBadRequest, "Name of employee cannot be empty")
+		json.NewEncoder(w).Encode(resData)
 		return
 	}
 
@@ -77,7 +80,10 @@ func UpdateEmployeeDataByID(w http.ResponseWriter, r *http.Request) {
 	// Read update model from body request
 	err = json.NewDecoder(r.Body).Decode(&incoingEmployeeData)
 	if err != nil {
-		fmt.Fprintf(w, "Error in reading employee data")
+		fmt.Println("Error in reading employee data")
+		resData := createResponse(http.StatusBadRequest, "Error in reading employee data")
+		json.NewEncoder(w).Encode(resData)
+		return
 	}
 
 	if incoingEmployeeData.Name != "" {
@@ -128,9 +134,9 @@ func UpdateEmployeeDataByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	employeeData.ID = id
-	//config.ID_array = append(config.ID_array, employeeData.ID.(primitive.ObjectID).Hex())
 
-	json.NewEncoder(w).Encode(employeeData)
+	resData := createResponse(http.StatusOK, "Successfully Updated employee data")
+	json.NewEncoder(w).Encode(resData)
 }
 
 func ActivateEmployee(w http.ResponseWriter, r *http.Request) {
@@ -165,8 +171,9 @@ func ActivateEmployee(w http.ResponseWriter, r *http.Request) {
 	}
 
 	employeeData.ID = id
+	resData := createResponse(http.StatusOK, "Successfully Activated employee")
 
-	json.NewEncoder(w).Encode(employeeData)
+	json.NewEncoder(w).Encode(resData)
 }
 
 func DeactivateEmployee(w http.ResponseWriter, r *http.Request) {
@@ -215,6 +222,11 @@ func DeactivateEmployee(w http.ResponseWriter, r *http.Request) {
 			mongoDB.GetError(err, w)
 			return
 		}
+		if deleteCount.DeletedCount == 0 {
+			resData := createResponse(http.StatusNotFound, "Employee data could not be deleted as it is not present in mongodb")
+			json.NewEncoder(w).Encode(resData)
+			return
+		}
 		for i := range config.ID_array {
 			if config.ID_array[i] == id {
 				config.ID_array = append(config.ID_array[:i], config.ID_array[i+1:]...)
@@ -222,7 +234,8 @@ func DeactivateEmployee(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	employeeData.ID = id
-	json.NewEncoder(w).Encode(employeeData)
+	resData := createResponse(http.StatusOK, "Successfully Deactivated employee")
+	json.NewEncoder(w).Encode(resData)
 }
 
 func GetAllEmployeeData(w http.ResponseWriter, r *http.Request) {
@@ -249,14 +262,19 @@ func GetAllEmployeeData(w http.ResponseWriter, r *http.Request) {
 		employeeData := models.Employee{}
 		err := cur.Decode(&employeeData)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("Error in decoding employee data")
+			resData := createResponse(http.StatusBadRequest, "Error in decoding employee data")
+			json.NewEncoder(w).Encode(resData)
+			return
 		}
 
 		employees = append(employees, employeeData)
 	}
 
 	if err := cur.Err(); err != nil {
-		log.Fatal(err)
+		fmt.Println("Error in decoding employee data")
+		resData := createResponse(http.StatusBadRequest, "Error in decoding employee data")
+		json.NewEncoder(w).Encode(resData)
 	}
 
 	json.NewEncoder(w).Encode(employees)
@@ -287,4 +305,11 @@ func GetAllEmployeeID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(config.ID_array)
+}
+
+func createResponse(code int, message string) models.ResponseData {
+	responseData := models.ResponseData{}
+	responseData.StatusCode = code
+	responseData.Message = message
+	return responseData
 }
