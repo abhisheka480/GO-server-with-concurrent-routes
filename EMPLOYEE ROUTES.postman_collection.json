@@ -1,0 +1,281 @@
+{
+	"info": {
+		"_postman_id": "16e30008-e199-4349-bcb2-c4330c7dab0a",
+		"name": "EMPLOYEE ROUTES",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "SET JWT FOR user1",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\":\"user1\",\n    \"password\":\"password1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/setJwtCookie",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"setJwtCookie"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SET JWT FOR user2",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\":\"user2\",\n    \"password\":\"password2\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/setJwtCookie",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"setJwtCookie"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ADD EMPLOYEE",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\":\"Max Payne\",\n    \"address\":{\n        \"houseNumber\":12,\n        \"street\":\"NG Lane\",\n        \"city\":\"Lucknow\",\n        \"state\":\"UP\",\n        \"pincode\":\"226010\"\n    },\n    \"department\":\"CNC cell\",\n    \"skills\":[\"python\",\"golang\",\"nodejs\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/add",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UPDATE EMPLOYEE",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"address\":{\n        \"houseNumber\":15,\n        \"pincode\":\"226016\"\n    },\n    \"skills\":[\"new\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/update/",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"update",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET EMPLOYEE BY ID",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"address\":{\n        \"houseNumber\":15,\n        \"pincode\":\"226016\"\n    },\n    \"skills\":[\"new\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/search/",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"search",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET ALL EMPLOYEES",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"address\":{\n        \"houseNumber\":15,\n        \"pincode\":\"226016\"\n    },\n    \"skills\":[\"new\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/list/",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET ALL EMPLOYEE ID'S",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"address\":{\n        \"houseNumber\":15,\n        \"pincode\":\"226016\"\n    },\n    \"skills\":[\"new\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/getAllEmployeeID/",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"getAllEmployeeID",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE EMPLOYEE BY ID",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "permanentlyDelete",
+						"value": "false",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/delete/",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"delete",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ACTIVATE EMPLOYEE BY ID",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "permanentlyDelete",
+						"type": "text",
+						"value": "false",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/restore/",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"restore",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
