@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/GO-server-with-concurrent-routes/mongoConnection"
+	"github.com/GO-server-with-concurrent-routes/config"
+	"github.com/GO-server-with-concurrent-routes/controllers/mongoDB"
+	"github.com/GO-server-with-concurrent-routes/models"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,7 +18,7 @@ import (
 func AddEmployeeData(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	employeeData := &Employee{}
+	employeeData := models.Employee{}
 
 	// we decode our body request params
 	err := json.NewDecoder(r.Body).Decode(&employeeData)
@@ -30,17 +32,18 @@ func AddEmployeeData(w http.ResponseWriter, r *http.Request) {
 	if employeeData.Name == "" {
 		fmt.Println("Name of employee cannot be empty")
 		json.NewEncoder(w).Encode("Name of employee cannot be empty")
+		return
 	}
 
 	// connect db
-	collection := mongoConnection.ConnectDB()
+	collection := mongoDB.ConnectDB()
 
 	result, err := collection.InsertOne(context.TODO(), employeeData)
 	if err != nil {
-		mongoConnection.GetError(err, w)
+		mongoDB.GetError(err, w)
 		return
 	}
-	//config.ID_array = append(config.ID_array, result.InsertedID.(string))
+	config.ID_array = append(config.ID_array, result.InsertedID)
 
 	json.NewEncoder(w).Encode(result)
 	fmt.Println("POST succesfull")
@@ -56,10 +59,10 @@ func UpdateEmployeeDataByID(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	fmt.Println("id:", id)
 
-	employeeData := &Employee{}
-	incoingEmployeeData := &Employee{}
+	employeeData := &models.Employee{}
+	incoingEmployeeData := &models.Employee{}
 
-	collection := mongoConnection.ConnectDB()
+	collection := mongoDB.ConnectDB()
 
 	// Create filter
 	filter := bson.M{"_id": id}
@@ -67,7 +70,7 @@ func UpdateEmployeeDataByID(w http.ResponseWriter, r *http.Request) {
 	// get stored employee data
 	err := collection.FindOne(context.TODO(), filter).Decode(&employeeData)
 	if err != nil {
-		mongoConnection.GetError(err, w)
+		mongoDB.GetError(err, w)
 		return
 	}
 
@@ -120,7 +123,7 @@ func UpdateEmployeeDataByID(w http.ResponseWriter, r *http.Request) {
 
 	err = collection.FindOneAndUpdate(context.TODO(), filter, update).Decode(&employeeData)
 	if err != nil {
-		mongoConnection.GetError(err, w)
+		mongoDB.GetError(err, w)
 		return
 	}
 
@@ -140,10 +143,10 @@ func ActivateEmployee(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	fmt.Println("id:", id)
 
-	employeeData := &Employee{}
+	employeeData := &models.Employee{}
 	employeeData.IsActive = true
 
-	collection := mongoConnection.ConnectDB()
+	collection := mongoDB.ConnectDB()
 
 	// Create filter
 	filter := bson.M{"_id": id}
@@ -157,7 +160,7 @@ func ActivateEmployee(w http.ResponseWriter, r *http.Request) {
 
 	err := collection.FindOneAndUpdate(context.TODO(), filter, update).Decode(&employeeData)
 	if err != nil {
-		mongoConnection.GetError(err, w)
+		mongoDB.GetError(err, w)
 		return
 	}
 
@@ -185,10 +188,10 @@ func DeactivateEmployee(w http.ResponseWriter, r *http.Request) {
 	//queryParam := r.URL.Query().Get("permanentlyDelete") //can be true or false
 	fmt.Println("queryParam:", queryParam)
 
-	employeeData := &Employee{}
+	employeeData := &models.Employee{}
 	employeeData.IsActive = false
 
-	collection := mongoConnection.ConnectDB()
+	collection := mongoDB.ConnectDB()
 
 	// Create filter
 	filter := bson.M{"_id": id}
@@ -202,15 +205,20 @@ func DeactivateEmployee(w http.ResponseWriter, r *http.Request) {
 
 		err := collection.FindOneAndUpdate(context.TODO(), filter, update).Decode(&employeeData)
 		if err != nil {
-			mongoConnection.GetError(err, w)
+			mongoDB.GetError(err, w)
 			return
 		}
 	} else { //permanentlyDelete = true
 		deleteCount, err := collection.DeleteOne(context.TODO(), filter)
 		fmt.Println("deleteCount:", deleteCount)
 		if err != nil {
-			mongoConnection.GetError(err, w)
+			mongoDB.GetError(err, w)
 			return
+		}
+		for i := range config.ID_array {
+			if config.ID_array[i] == id {
+				config.ID_array = append(config.ID_array[:i], config.ID_array[i+1:]...)
+			}
 		}
 	}
 	employeeData.ID = id
@@ -220,17 +228,17 @@ func DeactivateEmployee(w http.ResponseWriter, r *http.Request) {
 func GetAllEmployeeData(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	employees := []Employee{}
+	employees := []models.Employee{}
 
 	//Connection mongoDB with helper class
-	collection := mongoConnection.ConnectDB()
+	collection := mongoDB.ConnectDB()
 
 	// Create filter for get all employee data of active employees
 	filter := bson.M{"isActive": true}
 
 	cur, err := collection.Find(context.TODO(), filter)
 	if err != nil {
-		mongoConnection.GetError(err, w)
+		mongoDB.GetError(err, w)
 		return
 	}
 
@@ -238,7 +246,7 @@ func GetAllEmployeeData(w http.ResponseWriter, r *http.Request) {
 
 	for cur.Next(context.TODO()) {
 
-		employeeData := Employee{}
+		employeeData := models.Employee{}
 		err := cur.Decode(&employeeData)
 		if err != nil {
 			log.Fatal(err)
@@ -257,20 +265,26 @@ func GetAllEmployeeData(w http.ResponseWriter, r *http.Request) {
 func GetEmployeeDataByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	employeeData := &Employee{}
+	employeeData := &models.Employee{}
 	var params = mux.Vars(r)
 
 	// string to primitive.ObjectID
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
-	collection := mongoConnection.ConnectDB()
+	collection := mongoDB.ConnectDB()
 
 	filter := bson.M{"_id": id}
 	err := collection.FindOne(context.TODO(), filter).Decode(&employeeData)
 	if err != nil {
-		mongoConnection.GetError(err, w)
+		mongoDB.GetError(err, w)
 		return
 	}
 
 	json.NewEncoder(w).Encode(employeeData)
+}
+
+func GetAllEmployeeID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(config.ID_array)
 }
