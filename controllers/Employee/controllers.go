@@ -47,7 +47,7 @@ func AddEmployeeData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	config.ID_array = append(config.ID_array, result.InsertedID)
-
+	log.Println("request completed")
 	json.NewEncoder(w).Encode(result)
 	fmt.Println("POST succesfull")
 }
@@ -276,7 +276,7 @@ func GetAllEmployeeData(w http.ResponseWriter, r *http.Request) {
 		resData := createResponse(http.StatusBadRequest, "Error in decoding employee data")
 		json.NewEncoder(w).Encode(resData)
 	}
-
+	log.Println("request completed")
 	json.NewEncoder(w).Encode(employees)
 }
 
